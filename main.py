@@ -15,14 +15,10 @@ class Unbuffered(object):
        return getattr(self.stream, attr)
 sys.stdout = Unbuffered(sys.stdout)
 
-#  Any live cell with two or three live neighbours survives.
-#  Any dead cell with three live neighbours becomes a live cell.
-#  All other live cells die in the next generation. Similarly, all other dead cells stay dead.
-
 board = Board()
-board.draw()
-while 1:
+board.render()
+print(board.output)
+while board.update():
   time.sleep(1)
   print("") #Skip line
-  board.update()
-  board.draw()
+  print(board.output)

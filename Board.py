@@ -1,60 +1,47 @@
-from enum import IntEnum
-from random import randint
-
-class CellState(IntEnum):
-    empty = 0
-    living = 1
-    dead = 2
+from Slot import Slot, SlotState
 
 class Board:
 
     def __init__(self):
+        self.prevFrame = ""
+        self.output = ""
         self.width = 25
         self.height = 25
-        self.grid = [[(CellState.empty, CellState.living)[randint(0, 2) == 2] for y in range(self.width)] for x in range(self.height)]
+        self.grid = [[Slot() for y in range(self.width)] for x in range(self.height)]
 
     def update(self):
         for y in range(self.height):
             for x in range(self.width):
-                if self.grid[y][x] == CellState.living:
-                    self.updateCell(x, y)
+                self.updateSlot(x, y)
+        self.render()
+        if self.prevFrame == self.output:
+            return False
+        self.prevFrame = self.output #update prevFrame
+        return True
 
-    def updateCell(self, x, y):
-        state = self.grid[y][x]
-        neighbours = []
-        try:
-            for ry in range(y-1, y+1):
-                neighbours.append(self.grid[ry-1][x])
-                if ry != y:
-                    neighbours.append(self.grid[ry][x])
-                neighbours.append(self.grid[ry+1][x])
-        except IndexError:
-            a=0
-            #Do nothing
+    def updateSlot(self, x, y):
         aliveNeighbours = 0
-        deadNeighbours = 0
-        for i in range(len(neighbours)):
-            if neighbours[i] == CellState.living:
-                aliveNeighbours += 1
-            if neighbours[i] == CellState.dead:
-                deadNeighbours += 1
-        if state == CellState.living:
-            if aliveNeighbours == 2 or aliveNeighbours == 3:
-                self.grid[y][x] = CellState.living
-            else:
-                self.grid[y][x] = CellState.dead
-        elif state == CellState.dead:
-            if aliveNeighbours == 3:
-                self.grid[y][x] = CellState.living
-            else:
-                self.grid[y][x] = CellState.empty
+        xMin = x - 1
+        if xMin < 0:
+            xMin = 0
+        xMax = x + 2
+        if xMax > self.width:
+            xMax = self.width
+        yMin = y - 1
+        if yMin < 0:
+            yMin = 0
+        yMax = y + 2
+        if yMax > self.height:
+            yMax = self.height
+        for y in range(yMin, yMax):
+            for x in range(xMin, xMax):
+                if self.grid[y][x].state == SlotState.alive:
+                    aliveNeighbours += 1
+        self.grid[y][x].update(aliveNeighbours)
 
-
-    def draw(self):
+    def render(self):
+        self.output = ""
         for y in range(self.height):
             for x in range(self.width):
-                if self.grid[y][x] == CellState.empty:
-                    print(".", end="")
-                if self.grid[y][x] == CellState.living:
-                    print("O", end="")
-            print("") #newline
+                self.output += self.grid[y][x].render()
+            self.output += "\n"
